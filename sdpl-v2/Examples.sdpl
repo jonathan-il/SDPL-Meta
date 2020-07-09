@@ -1,0 +1,17 @@
+// In this example the notation x[3,1] says get the first elemennt of a 3 element tuple
+// z[3,2] <- y says return the tuple z of 3 elements with its 2nd element replaced by y
+// This is just syntactic sugar for a nexted tupling and projection operations.
+fun idx (z) := 
+    let y = 3.1 in 
+    let x = z[3,2] <- y in 
+    let y2 = x[3,1] + 1.1 in 
+    x[3,1] <- y2
+
+fun h (z) := if less ((z,1.4)) then h (times ((z,z))) else z 
+
+//brackets are optional
+// try out let z = 5.0 in rd(x.w(z))(1.001)*1.001
+fun w(x) := { 
+    while x . less((x,1.4)) do 
+        times((x,x)) 
+}

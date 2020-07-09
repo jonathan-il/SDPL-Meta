@@ -1,0 +1,33 @@
+
+
+//A comment at the beginning
+fun f (x : real) : real := x  
+
+
+fun g (y : real) : real := y + y
+
+fun h (z : real) : real := if less ((z,1.4){real,real}) then h (times( (z,z){real,real} )) else z
+
+//remember not to put parentheses around the whole guard of the loop
+// try calling rd (x : real . w(x) : real) (1.001) * 1.001 at the commandline
+// compare this with rd(x : real . h(x) : real) (1.001) * 1.001
+//also remember to pust spaces around the colons
+//Also, there is no layout sensitivity in this language.  
+fun w (x : real) : real := {
+    while (x : real) . less ((x,1.4){real,real}) do 
+        times ((x,x){real,real})
+}
+
+
+fun activationExample (z : [2]) : real :=
+    let x : real = fst{real,real}(z) in 
+    let y : real = fst{real,real}(z) in 
+    let wtdsum : real = x + y in 
+    {if less((wtdsum,0.5){real,real}) then 0.0 else 1.0}
+
+//the syntax x[3,1] and x[3,1] <- y are not actual syntax.  They are just sugar for building certain standard terms in an easier way.
+fun idxExample (z : [3]) : [3] := 
+    let y : real = 3.1 in 
+    let x : [3] = z[3,2] <- y in 
+    let y2 : real = x[3,1] + 1.1 in 
+    x[3,1] <- y2

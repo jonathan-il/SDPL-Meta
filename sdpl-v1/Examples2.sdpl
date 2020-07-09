@@ -1,0 +1,5 @@
+fun activationExample (z : [2]) : real := 
+    let x : real = fst{real,real}(z) in 
+    let y : real = fst{real,real}(z) in 
+    let wtdsum : real = x + y in 
+    {if less((wtdsum,0.5){real,real}) then 0.0 else 1.0}
