@@ -23,7 +23,7 @@ import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.Map as M
 
 
-
+-- import Debug.Trace
 
 safeLoadFile :: FilePath -> IO (Maybe String)
 safeLoadFile p = (Just <$> readFile p) `catch` handler

@@ -15,3 +15,6 @@ fun w(x) := {
     while x . less((x,1.4)) do 
         times((x,x)) 
 }
+
+
+fun s(z) := times((z,z))

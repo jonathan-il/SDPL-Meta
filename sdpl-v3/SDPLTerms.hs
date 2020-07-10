@@ -82,7 +82,7 @@ type FuncDirIClosure a = Int -> RawDir a
 -- renamings (required for certain operational details) back to the 
 -- their original, say, name and possibly even line number-column number.
 
--- All types are inferrable
+-- All types are inferrable 
 -- We remove the assumption that + and 0 are only defined on 
 -- base type.  However! there is a little annoying issue. 
 -- We need to regard Const 0 and 0 as the same thing.
@@ -102,7 +102,7 @@ type FuncDirIClosure a = Int -> RawDir a
 type RawDir a = RawvDir a Int
 type RawvDir a v = Rawvd a v (S.Set v)
 data Rawvd a v d = 
-    DVar v 
+    DVar (v ,d) 
     | DConst a 
     | DZero 
     | DSum (Rawvd a v d,d) (Rawvd a v d,d) -- we only keep track where we use, there is a better data structure we can use for this purpose but this is for testing.  We're effectively messing up our space performance.  But using the reverse derivative anyways, so who cares.
@@ -162,6 +162,18 @@ data Tracevd a v d =
     | DTPair !(Tracevd a v d,d) !(Tracevd a v d,d)
     | DTFst !(Tracevd a v d,d) 
     | DTSnd !(Tracevd a v d,d) 
+
+instance (Show a,Show v) => Show (Tracevd a v d) where 
+    show (DTVar x) = show x 
+    show (DTConst a) = show a
+    show DTZero = "0"
+    show (DTSum (m,_) (n,_)) = show m ++ " + " ++ show n
+    show (DTOp op (m,_)) = show op ++ "(" ++ show m ++ ")"
+    show (DTLet x (a,_) (m,_)) = "let " ++ show x ++ "=" ++ show a ++ " in " ++ show m 
+    show DTNil = "()"
+    show (DTPair (m,_) (n,_)) = "(" ++ show m ++ "," ++ show n ++ ")"
+    show (DTFst (m,_)) = "fst(" ++ show m ++ ")"
+    show (DTSnd (m,_)) = "snd(" ++ show m ++ ")"
 
 
 data Rawv a v = 

@@ -21,7 +21,7 @@ import Control.Monad.Trans
 import Control.Monad 
 import qualified Control.Monad.Trans.State.Strict as State 
 
-import Debug.Trace
+-- import Debug.Trace
 
 
 -- ****************************
@@ -65,7 +65,7 @@ that we returned a formal 0 as a value when displaying it.  Then they won't get 
 when they are also seeing *. 
 -}
 fullEvaluation term = case term of 
-    DVar x -> getVar x 
+    DVar (x,_) -> getVar x 
     DConst a -> return $ CConst a
     DZero -> return CZero 
     DSum (m,_) (n,_) -> do 
@@ -112,7 +112,7 @@ fullEvaluation term = case term of
             BTrue -> fullEvaluation m 
             BFalse -> fullEvaluation n
     wbm@(DWhile cont b (m,_) ) -> do 
-        traceM "got into the while loop"
+        -- traceM "got into the while loop"
         b' <- fullBoolEvaluation b 
         case b' of 
             BFalse -> getVar cont 
@@ -126,6 +126,8 @@ fullEvaluation term = case term of
                 return retval
     rm@(DRD x m a v) -> do 
         c <- fullEvaluationSymbolic rm 
+        -- traceM ("differentiating " ++ show m ++ " at " ++ show x)
+        -- traceM ("symbolically yielded ")
         fullEvaluationTrace c
     DCall fname (arg,_) -> do 
         arg' <- fullEvaluation arg 
@@ -191,7 +193,7 @@ fullEvaluationTrace term = case term of
 
 
 fullEvaluationSymbolic term = case term of 
-    DVar x -> return $ DTVar x 
+    DVar (x,_) -> return $ DTVar x 
     DConst a -> return $ DTConst a
     DNil -> return DTNil 
     DZero -> return DTZero 
@@ -234,11 +236,13 @@ fullEvaluationSymbolic term = case term of
             BTrue -> fullEvaluationSymbolic m 
             BFalse -> fullEvaluationSymbolic n 
     wbm@(DWhile cont b m) -> do 
+        -- traceM $ "got into the while loop at "  ++ show cont
         s0 <- freshVar 
         retval <- while2 cont b m s0 -- cont is free in while cont b m, and as long as while2 preserves this, we're good.  And it does.  Because cont is uniquely free in m, if anything is free in m.
         -- we also need that the only free variable in while2 cont b m s is s
         return $ DTLet s0 (DTVar cont,S.singleton cont) (retval,S.singleton s0)
     DRD x (m,freem) (a,freea) (v,freev) -> do 
+        -- traceM ("differentating " ++ show m ++ " at " ++ show x)
         c <- fullEvaluationSymbolic a -- c has the same free variables a
         d <- fullEvaluationSymbolic v -- d has the same free varialbes as v
         c_v <- fullEvaluationTrace c 
@@ -246,19 +250,23 @@ fullEvaluationSymbolic term = case term of
         setLocals $ M.insert x c_v locs
         -- x : t \proves e : b 
         e <- fullEvaluationSymbolic m -- e has the same freevariables as m
+        -- traceM (show e)
         setLocals locs
         xbar <- freshVar 
         ybar <- freshVar 
         -- a call to symbolicDiff x e a w has freevariables of fv(e)\{x} cup fv(a) \cup fv(w)
+        -- traceM ("symbolically differentiating " ++ show e ++ " wrt " ++ show x ++ "at" ++ show c ++ "perturbed by " ++ show d ++ " in free context " ++ show freem)
         xrexbarybar <- symbolicDiff x (e,freem) (VVar xbar,S.singleton xbar) (VVar ybar,S.singleton ybar)
         -- -- hold on to the freevariables of symbexbarybar without the y and then with it 
         let freesymdiffexbarnoy = (freem S.\\ (S.singleton x)) `S.union` (S.singleton xbar)
         let freesymdiffexbarybar = freesymdiffexbarnoy `S.union` (S.singleton ybar)
         -- need to revisit
         let retval = DTLet xbar (c,freea) $ (DTLet ybar (d,freev) (xrexbarybar, freesymdiffexbarybar),freesymdiffexbarnoy) -- ybar is bound in the resulting term y = m in n.  Note by hypothesis/typing we cannot have y in m.
+        -- traceM (show retval)
         return retval
         -- undefined
     DCall name (arg,freearg) -> do 
+        -- traceM ("calling " ++ name ++ " symbolically")
         c <- fullEvaluationSymbolic arg -- c has the same free variables as arg
         v <- fullEvaluationTrace c 
         body <- getFun name 

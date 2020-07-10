@@ -51,7 +51,7 @@ updateVars s t a = if S.member t s then (S.delete t s) `S.union` a else s
 -- That means that we can disregard if it occurs in boolean terms. 
 isFreeInDTerm :: (Ord v) => v ->  (Rawvd a v) (S.Set v) -> Bool
 isFreeInDTerm searchv trem = case trem of 
-    DVar x -> searchv == x 
+    DVar (x,_) -> searchv == x 
     DConst _ -> False 
     DZero -> False 
     DSum (_,freem) (_,freen) -> (S.member searchv freem) || (S.member searchv freen)
@@ -134,7 +134,7 @@ convertTermToDTerm = fst . convertTermToDTermFree
 
 convertTermToDTermFree :: Ord v => Rawv a v -> (RawvDir a v,S.Set v)
 convertTermToDTermFree trem = case trem of 
-    Var x -> (DVar x,S.singleton x)
+    Var x -> let sx = S.singleton x in (DVar (x,sx),sx)
     Const a -> (DConst a,S.empty)
     Zero -> (DZero,S.empty)
     m :+ n -> case (convertTermToDTermFree m,convertTermToDTermFree n) of 
@@ -165,7 +165,7 @@ convertBTermToDBTerm t = case t of
 -- Put one in boolean terms because free variables don't matter. 
 oneify :: Rawv a v -> Rawvd a v (S.Set v)
 oneify t = case t of 
-    Var x -> DVar x
+    Var x -> DVar (x,S.empty)
     Const a -> DConst a 
     Zero -> DZero 
     m :+ n -> DSum (oneify m,S.empty) (oneify n,S.empty)
@@ -313,7 +313,7 @@ makeClosedDir trem closingvar formalarg = fst (makeClosedDirFree trem closingvar
 
 makeClosedDirFree :: (Ord v, Eq v) => Rawv a v -> v -> (v -> (RawvDir a v,S.Set v))
 makeClosedDirFree trem closingvar formalarg = case trem of 
-    Var v -> if closingvar == v then (DVar formalarg,S.singleton v) else (DVar v,S.singleton v)
+    Var v -> if closingvar == v then (DVar (formalarg,S.singleton formalarg),S.singleton formalarg) else (DVar (v,S.singleton v),S.singleton v) -- previously the first one had S.singleton v...!!>?!
     Const a -> (DConst a,S.empty)
     Zero -> (DZero,S.empty)
     m :+ n -> let (m'@(_,freem),n'@(_,freen)) = (makeClosedDirFree m closingvar formalarg,makeClosedDirFree n closingvar formalarg) in (DSum m' n',S.union freem freen)
@@ -390,7 +390,7 @@ makeClosedBDir trem closingvar formalarg = case trem of
 
 closeone :: (Eq v) => Rawv a v -> v -> (v -> Rawvd a v (S.Set v))
 closeone trem closingvar formalarg = case trem of 
-    Var v -> if closingvar == v then DVar formalarg else DVar v 
+    Var v -> if closingvar == v then DVar (formalarg,S.empty) else DVar (v,S.empty)
     Const a -> DConst a 
     Zero -> DZero 
     m :+ n -> DSum (closeone trem closingvar formalarg,S.empty) (closeone trem closingvar formalarg,S.empty)
