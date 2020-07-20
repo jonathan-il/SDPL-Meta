@@ -23,6 +23,13 @@ For example
 
 ghc --make -O2 -pgmlo opt-6.0 -pgmlc llc-6.0 -fllvm -fspecialize-aggressively -fstatic-argument-transformation -funbox-strict-fields -fworker-wrapper -fsimplifier-phases=8 Main.hs
 
+On arch linux (with llvm9):
+
+ghc -dynamic --make -O2 -pgmlo opt -pgmlc llc -fllvm -fspecialize-aggressively -fstatic-argument-transformation -funbox-strict-fields -fworker-wrapper -fsimplifier-phases=8 Main.hs
+
+On arch linux (without llvm9):
+ghc -dynamic --make -O2  -fspecialize-aggressively -fstatic-argument-transformation -funbox-strict-fields -fworker-wrapper -fsimplifier-phases=8 Main.hs
+
 The static argument transformation is a neat one.  A lot of recursive functions 
 pass in arguments that aren't always used, and they're just passed down the chain of command
 until needed.  In this case the argument can be lifted and a localized loop can be run 
